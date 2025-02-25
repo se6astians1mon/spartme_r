@@ -127,9 +127,31 @@ public class MainActivity extends AppCompatActivity {
 
                     bufferX.remove();
                     bufferX.add(new float[]{avg(samplesX)-calibrationValues[0], avg(samplesY)-calibrationValues[1]});
+                    //try to guess ellipse:
+
+
+
+
+
                     int[] start_end_ellipse = findEllipseThroughAutocorrelation(bufferX, true);
                     //Log.i("eclipsefinding", start_end_ellipse[0]+" ,"+start_end_ellipse[1]);
                     if(start_end_ellipse[1]>0){
+                        double[] xX = new double[bufferX.size()];
+                        double[] yY = new double[bufferX.size()];
+                        int i = 0;
+                        for (float[] point : bufferX) {
+                            xX[i] = point[0];
+                            yY[i] = point[1];
+                            i++;
+                        }
+                        try {
+                            double[] params = EllipseFitter.fitEllipse(xX, yY);
+                            double[] fittedParams = EllipseFitter.cartToPol(params);
+                            Log.i("directellipsefit", "Fitted Ellipse Parameters: " + fittedParams[0]+", "+fittedParams[1]);
+                        } catch (IllegalArgumentException e) {
+                            Log.e("Ellipse Error"," "+e.getMessage());
+                        }
+
                         double[][] points = PCAEllipse.queueTo2DArray(bufferX, start_end_ellipse);
                         double[] directionvector =  rotateVector(PCAEllipse.findMajor(points), 0);
                         c.center = PCAEllipse.getCenter(points);
